@@ -1,0 +1,12 @@
+# Ignore the SSH keys you just had trouble with
+ozcascante_github_ssh_key*
+
+# Ignore ROS 2 build and local folders
+build/
+install/
+log/
+
+# Ignore system files
+.DS_Store
+python_virtual_env/
+

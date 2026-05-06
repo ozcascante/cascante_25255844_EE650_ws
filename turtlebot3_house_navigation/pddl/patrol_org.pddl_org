@@ -4,15 +4,15 @@
 ;; Types ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (:types
 robot
-room
+waypoint
 );; end Types ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Predicates ;;;;;;;;;;;;;;;;;;;;;;;;;
 (:predicates
 
-(robot_at ?r - robot ?rm - room)
-(connected ?rm1 ?rm2 - room)
-(patrolled ?rm - room)
+(robot_at ?r - robot ?wp - waypoint)
+(connected ?wp1 ?wp2 - waypoint)
+(patrolled ?wp - waypoint)
 
 );; end Predicates ;;;;;;;;;;;;;;;;;;;;
 ;; Functions ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -21,26 +21,26 @@ room
 );; end Functions ;;;;;;;;;;;;;;;;;;;;
 ;; Actions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (:durative-action move
-    :parameters (?r - robot ?rm1 ?rm2 - room)
+    :parameters (?r - robot ?wp1 ?wp2 - waypoint)
     :duration ( = ?duration 5)
     :condition (and
-        (at start(connected ?rm1 ?rm2))
-        (at start(robot_at ?r ?rm1))
+        (at start(connected ?wp1 ?wp2))
+        (at start(robot_at ?r ?wp1))
         )
     :effect (and
-        (at start(not(robot_at ?r ?rm1)))
-        (at end(robot_at ?r ?rm2))
+        (at start(not(robot_at ?r ?wp1)))
+        (at end(robot_at ?r ?wp2))
     )
 )
 
 (:durative-action patrol
-    :parameters (?r - robot ?rm - room)
+    :parameters (?r - robot ?wp - waypoint)
     :duration ( = ?duration 5)
     :condition (and
-        (at start(robot_at ?r ?rm))
+        (at start(robot_at ?r ?wp))
        )
     :effect (and
-        (at end(patrolled ?rm))
+        (at end(patrolled ?wp))
     )
 )
 

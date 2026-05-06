@@ -67,15 +67,15 @@ set goal (and (robot_at leia room6))
 
 In terminal 1:
 ```
-ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py x_pose:=-6.3 y_pose:=-1.6
+ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py x_pose:=-6.3 y_pose:=-1.6 use_sim_time:=True headless:=False  autostart:=True
 ```
 In terminal 2:
 ```
-ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=turtlebot3_house_navigation/maps/house_explored.yaml
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True headless:=False  autostart:=True map:=turtlebot3_house_navigation/maps/house_explored.yaml
 ```
 In terminal 3:
 ```
-ros2 launch turtlebot3_house_navigation patrol_example_launch.py
+ros2 launch turtlebot3_house_navigation patrol_example_launch.py use_sim_time:=True
 ```
 In terminal 4:
 ```

@@ -1,10 +1,10 @@
 amcl:
   ros__parameters:
     use_sim_time: True
-    alpha1: 0.2
-    alpha2: 0.2
-    alpha3: 0.2
-    alpha4: 0.2
+    alpha1: 0.1 # Noise in rotation from rotation
+    alpha2: 0.1 # Noise in rotation from translation
+    alpha3: 0.1 # Noise in rotation from translation
+    alpha4: 0.1 # Noise in rotation from rotation
     alpha5: 0.2
     base_frame_id: "base_footprint"
     beam_skip_distance: 0.5
@@ -32,7 +32,7 @@ amcl:
     tf_broadcast: true
     transform_tolerance: 1.0
     update_min_a: 0.2
-    update_min_d: 0.25
+    update_min_d: 0.1
     z_hit: 0.5
     z_max: 0.05
     z_rand: 0.5
@@ -59,7 +59,7 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /odom
-    bt_loop_duration: 200
+    bt_loop_duration: 400
     default_server_timeout: 20
     # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
     # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
@@ -117,9 +117,9 @@ bt_navigator_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: True
-    controller_frequency: 5.0
+    controller_frequency: 3.0
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.5
+    min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
     progress_checker_plugin: "progress_checker"
@@ -165,7 +165,7 @@ controller_server:
       vx_samples: 20
       vy_samples: 5
       vtheta_samples: 20
-      sim_time: 1.7
+      sim_time: 2.5
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.2
@@ -205,8 +205,8 @@ local_costmap:
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.2
+        cost_scaling_factor: 10.0 # Lowering makes the "gradient" smoother
+        inflation_radius: 0.23 # Must be > robot_radius (0.22)
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -268,8 +268,8 @@ global_costmap:
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        cost_scaling_factor: 10.0
+        inflation_radius: 0.23
       always_send_full_costmap: True
   global_costmap_client:
     ros__parameters:
@@ -293,7 +293,7 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 2.0
+    expected_planner_frequency: 10.0
     use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:

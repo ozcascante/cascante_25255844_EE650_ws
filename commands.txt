@@ -1,0 +1,24 @@
+set instance ecobot robot
+set instance dinning room 
+set instance kitchen room 
+set instance utility room
+set instance hallway room
+set instance bedroom1 room
+set instance bedroom2 room
+set instance bathroom room
+
+set predicate (connected dinning kitchen)
+set predicate (connected kitchen dinning)
+set predicate (connected kitchen utility)
+set predicate (connected utility kitchen)
+set predicate (connected dinning hallway)
+set predicate (connected hallway dinning)
+set predicate (connected hallway bedroom1)
+set predicate (connected bedroom1 hallway)
+set predicate (connected bedroom1 bedroom2)
+set predicate (connected bedroom2 bedroom1)
+set predicate (connected bedroom1 bathroom)
+set predicate (connected bathroom bedroom1)
+
+set predicate (robot_at ecobot utility)
+set goal (and (robot_at ecobot bathroom))
