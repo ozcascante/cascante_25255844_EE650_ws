@@ -84,3 +84,7 @@ ros2 run plansys2_terminal plansys2_terminal
 > get plan
 > run
 ```
+```
+rm -rf /tmp/plansys2_*
+rm -fr /dev/shm/fastrtps_port*
+```
