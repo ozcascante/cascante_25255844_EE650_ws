@@ -37,41 +37,30 @@ public:
   MoveAction()
   : plansys2::ActionExecutorClient("move", 500ms)
   {
-    geometry_msgs::msg::PoseStamped wp;
-    wp.header.frame_id = "map";
-    wp.header.stamp = now();
-    wp.pose.position.x = -2.55;
-    wp.pose.position.y = 0.95;
-    wp.pose.position.z = 0.0;
-    wp.pose.orientation.x = 0.0;
-    wp.pose.orientation.y = 0.0;
-    wp.pose.orientation.z = 0.0;
-    wp.pose.orientation.w = 1.0;
-    waypoints_["dinning"] = wp;
+    // 1. Get the list of room names
+    this->declare_parameter("waypoints", std::vector<std::string>());
+    auto wp_names = this->get_parameter("waypoints").as_string_array();
 
-    wp.pose.position.x = -6.35;
-    wp.pose.position.y = 3.1;
-    waypoints_["kitchen"] = wp;
+    for (const auto & name : wp_names) {
+      // 2. Get coordinates [x, y, yaw] for each room
+      this->declare_parameter(name, std::vector<double>());
+      auto coords = this->get_parameter(name).as_double_array();
 
-    wp.pose.position.x = -6.35;
-    wp.pose.position.y = -0.28;
-    waypoints_["utility"] = wp;
-
-    wp.pose.position.x = 1.30;
-    wp.pose.position.y = 0.455;
-    waypoints_["hallway"] = wp;
-
-    wp.pose.position.x = 4.6;
-    wp.pose.position.y = 1.50;
-    waypoints_["bedroom1"] = wp;
-
-    wp.pose.position.x = 6.12;
-    wp.pose.position.y = -1.62;
-    waypoints_["bedroom2"] = wp;
-
-    wp.pose.position.x = 1.086;
-    wp.pose.position.y = 4.165;
-    waypoints_["bathroom"] = wp;
+      geometry_msgs::msg::PoseStamped wp;
+      wp.header.frame_id = "map";
+      wp.header.stamp = now();
+      
+      wp.pose.position.x = coords[0];
+      wp.pose.position.y = coords[1];
+      wp.pose.position.z = 0.0;
+      wp.pose.orientation.x = 0.0;
+      wp.pose.orientation.y = 0.0;
+      wp.pose.orientation.z = 0.0;
+      wp.pose.orientation.w = 1.0; // Simplify orientation for now
+      waypoints_[name] = wp;
+      RCLCPP_INFO(get_logger(), "Loaded room: %s at [%f, %f]", name.c_str(), coords[0], coords[1]);
+    }  
+    
 
     using namespace std::placeholders;
     pos_sub_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
