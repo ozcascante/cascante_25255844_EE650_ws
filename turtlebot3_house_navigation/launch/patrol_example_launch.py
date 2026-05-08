@@ -21,54 +21,56 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
-
 def generate_launch_description():
-    # Get the launch directory
-    example_dir = get_package_share_directory('turtlebot3_house_navigation')
+    # 1. Setup paths
+    pkg_dir = get_package_share_directory('turtlebot3_house_navigation')
+    plansys_dir = get_package_share_directory('plansys2_bringup')
+    
+    # Corrected variable name
+    rooms_params_file = os.path.join(pkg_dir, 'params', 'rooms.yaml')
 
+    # 2. PlanSys2 Bringup
     plansys2_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('plansys2_bringup'),
-            'launch',
-            'plansys2_bringup_launch_monolithic.py')),
-        launch_arguments={'model_file': example_dir + '/pddl/patrol.pddl'}.items()
-        )
+            plansys_dir, 'launch', 'plansys2_bringup_launch_monolithic.py')),
+        launch_arguments={
+            'model_file': os.path.join(pkg_dir, 'pddl', 'patrol.pddl'),
+            'use_sim_time': 'True'
+        }.items()
+    )
 
-#    nav2_cmd = IncludeLaunchDescription(
-#        PythonLaunchDescriptionSource(os.path.join(
-#            get_package_share_directory('nav2_bringup'),
-#            'launch',
-#            'tb3_simulation_launch.py')),
-#        launch_arguments={
-#            'autostart': 'true',
-#            'use_rviz': 'false',        # <--- This stops the 2nd RViz
-#            'use_simulator': 'false',   # <--- This stops it from trying to open Gazebo again
-#            'params_file': os.path.join(example_dir, 'params', 'nav2_params.yaml')
-#        }.items())
+    # 3. Your custom nodes (Note the added use_sim_time)
+    common_params = [rooms_params_file, {'use_sim_time': True}]
 
-    # Specify the actions
     move_cmd = Node(
         package='turtlebot3_house_navigation',
         executable='move_action_node',
         name='move_action_node',
         output='screen',
-        parameters=[])
+        parameters=common_params)
 
     patrol_cmd = Node(
         package='turtlebot3_house_navigation',
         executable='patrol_action_node',
         name='patrol_action_node',
         output='screen',
-        parameters=[])
+        parameters=common_params)
 
-    # Create the launch description and populate
+    controller_cmd = Node(
+        package='turtlebot3_house_navigation',
+        executable='patrolling_controller_node',
+        name='patrolling_controller_node',
+        output='screen',
+        parameters=common_params)    
+
+    # 4. Create Launch Description
     ld = LaunchDescription()
 
-    # Declare the launch options
+    # Add actions (Make sure gazebo is launched separately or uncomment the gazebo_cmd logic)
     ld.add_action(plansys2_cmd)
-#    ld.add_action(nav2_cmd)
-
     ld.add_action(move_cmd)
     ld.add_action(patrol_cmd)
+    ld.add_action(controller_cmd)
 
     return ld
+
