@@ -13,19 +13,23 @@ find_package(plansys2_executor REQUIRED)
 find_package(plansys2_planner REQUIRED)
 find_package(plansys2_problem_expert REQUIRED)
 find_package(plansys2_pddl_parser REQUIRED)
+find_package(gazebo_msgs REQUIRED)
+
 
 set(CMAKE_CXX_STANDARD 17)
 
 set(dependencies
     rclcpp
     rclcpp_action
+    geometry_msgs
     plansys2_msgs
     nav2_msgs
     plansys2_domain_expert
     plansys2_executor
     plansys2_planner
     plansys2_problem_expert
-    plansys2_pddl_parser
+    plansys2_pddl_parser   
+    gazebo_msgs
 )
 
 add_executable(move_action_node src/move_action_node.cpp)
@@ -37,7 +41,7 @@ ament_target_dependencies(patrol_action_node ${dependencies})
 add_executable(patrolling_controller_node src/patrolling_controller_node.cpp)
 ament_target_dependencies(patrolling_controller_node ${dependencies})
 
-install(DIRECTORY launch pddl params DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch pddl worlds params DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   move_action_node
