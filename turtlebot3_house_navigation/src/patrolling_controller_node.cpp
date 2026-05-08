@@ -42,24 +42,42 @@ public:
     problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
     executor_client_ = std::make_shared<plansys2::ExecutorClient>();
 
+
     // Wait for PlanSys2 lifecycle nodes to become active
     rclcpp::sleep_for(std::chrono::seconds(5));
+
+    // Load the waypoint list from the rooms.yaml
+    this->declare_parameter("waypoints", std::vector<std::string>());
+    waypoints_ = this->get_parameter("waypoints").as_string_array();
+
+    // DEBUG PRINT:
+    //RCLCPP_INFO(this->get_logger(), "Waypoints loaded: %zu", waypoints_.size());
+    //for (const auto & w : waypoints_) {
+    //    RCLCPP_INFO(this->get_logger(), " - Found room: '%s'", w.c_str());
+    //}
 
     init_knowledge();
   }
 
   void init_knowledge()
   {
-    problem_expert_->addInstance(plansys2::Instance{"ecobot", "robot"});
-    problem_expert_->addInstance(plansys2::Instance{"dining", "room"});
-    problem_expert_->addInstance(plansys2::Instance{"kitchen", "room"});
-    problem_expert_->addInstance(plansys2::Instance{"utility", "room"});
-    problem_expert_->addInstance(plansys2::Instance{"hallway", "room"});
-    problem_expert_->addInstance(plansys2::Instance{"bedroom1", "room"});
-    problem_expert_->addInstance(plansys2::Instance{"bedroom2", "room"});
-    problem_expert_->addInstance(plansys2::Instance{"bathroom", "room"});
 
-    problem_expert_->addPredicate(plansys2::Predicate("(robot_at ecobot utility)"));
+    problem_expert_->addInstance(plansys2::Instance{"ecobot", "robot"});
+  
+
+    // Add all rooms from the YAML list
+    for (const auto & room : waypoints_) {
+      if (!problem_expert_->addInstance(plansys2::Instance{room, "room"})) {
+         // If it fails here, it's usually because the room is already there
+        RCLCPP_DEBUG(this->get_logger(), "Room %s already exists.", room.c_str());
+      }
+    }
+
+    this->declare_parameter("start_room_name", "utility");
+    std::string start_room = this->get_parameter("start_room_name").as_string();
+    problem_expert_->addPredicate(
+        plansys2::Predicate("(robot_at ecobot " + start_room + ")"));
+
     problem_expert_->addPredicate(plansys2::Predicate("(connected dining kitchen)"));
     problem_expert_->addPredicate(plansys2::Predicate("(connected kitchen dining)"));
     problem_expert_->addPredicate(plansys2::Predicate("(connected kitchen utility)"));
@@ -72,9 +90,6 @@ public:
     problem_expert_->addPredicate(plansys2::Predicate("(connected bedroom2 bedroom1)"));
     problem_expert_->addPredicate(plansys2::Predicate("(connected bedroom1 bathroom)"));
     problem_expert_->addPredicate(plansys2::Predicate("(connected bathroom bedroom1)"));
-
-    // set predicate (robot_at ecobot utility)
-    // set goal (and (robot_at ecobot bathroom))
 
   }
 
@@ -414,6 +429,9 @@ public:
 private:
   typedef enum {STARTING, PATROL_KITCHEN, PATROL_UTILITY, PATROL_HALLWAY, PATROL_BEDROOM1, PATROL_BEDROOM2} StateType;
   StateType state_;
+
+  //Start variable to track rooms
+  std::vector<std::string> waypoints_;
 
   std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
   std::shared_ptr<plansys2::PlannerClient> planner_client_;
