@@ -1,5 +1,4 @@
 import os
-
 from launch import LaunchDescription
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
@@ -26,6 +25,14 @@ def generate_launch_description():
 
     common_params = [rooms_params_file, {'use_sim_time': True}]
 
+    # Problem generator - runs first to set up random initial state
+    problem_generator_cmd = Node(
+        package='turtlebot3_house_navigation',
+        executable='problem_generator_node',
+        name='problem_generator_node',
+        output='screen',
+        parameters=common_params)
+
     move_cmd = Node(
         package='turtlebot3_house_navigation',
         executable='move_action_node',
@@ -40,6 +47,13 @@ def generate_launch_description():
         output='screen',
         parameters=common_params)
 
+    turn_off_light_cmd = Node(
+        package='turtlebot3_house_navigation',
+        executable='turn_off_light_action_node',
+        name='turn_off_light_action_node',
+        output='screen',
+        parameters=common_params)
+
     controller_cmd = Node(
         package='turtlebot3_house_navigation',
         executable='patrolling_controller_node',
@@ -49,7 +63,9 @@ def generate_launch_description():
 
     return LaunchDescription([
         plansys2_cmd,
+        problem_generator_cmd,
         move_cmd,
         patrol_cmd,
+        turn_off_light_cmd,
         controller_cmd
     ])
