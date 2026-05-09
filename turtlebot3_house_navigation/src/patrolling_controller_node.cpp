@@ -164,7 +164,9 @@ private:
 
     for (const auto & action_feedback : feedback.action_execution_status) {
       if (action_feedback.status == plansys2_msgs::msg::ActionExecutionInfo::EXECUTING) {
-        RCLCPP_INFO(this->get_logger(), "[%s %.0f%%]",
+        // This will only print once every 3000ms (3 seconds)
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 3000, 
+          "[%s %.0f%%]",
           action_feedback.action.c_str(),
           action_feedback.completion * 100.0);
       }
