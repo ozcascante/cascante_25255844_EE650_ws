@@ -21,6 +21,14 @@ def generate_launch_description():
         start_room = random.choice(rooms)
         x, y, yaw = params[start_room]
 
+    # Write start room to a temp file for other nodes to read. Probably we should use a topic but this is faster
+    # for now to develop. I will revisit if I have time to use a topic.
+    start_room_file = '/tmp/patrol_start_room.txt'
+    with open(start_room_file, 'w') as f:
+        f.write(start_room)
+    print(f"[random_spawn] Selected start room: {start_room} at ({x}, {y})")
+
+
     # Launch Gazebo + TB3 in the house world
     tb3_gazebo_dir = get_package_share_directory('turtlebot3_gazebo')
 

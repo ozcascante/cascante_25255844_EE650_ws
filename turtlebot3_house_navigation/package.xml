@@ -23,6 +23,7 @@
   <depend>plansys2_problem_expert</depend>
   <depend>plansys2_pddl_parser</depend>
   <depend>gazebo_msgs</depend>
+  <depend>std_msgs</depend>
 
   <exec_depend>plansys2_bringup</exec_depend>
   <exec_depend>plansys2_terminal</exec_depend>

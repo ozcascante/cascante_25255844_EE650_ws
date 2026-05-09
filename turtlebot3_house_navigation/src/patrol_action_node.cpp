@@ -1,22 +1,11 @@
-// Copyright 2019 Intelligent Robotics Lab
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 #include <memory>
+#include <string>
 
 #include "geometry_msgs/msg/twist.hpp"
+#include "std_msgs/msg/string.hpp"
 
 #include "plansys2_executor/ActionExecutorClient.hpp"
+#include "plansys2_problem_expert/ProblemExpertClient.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
@@ -30,12 +19,18 @@ public:
   Patrol()
   : plansys2::ActionExecutorClient("patrol", 1s)
   {
+    problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
   }
 
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   on_activate(const rclcpp_lifecycle::State & previous_state)
   {
     progress_ = 0.0;
+    
+    // Get room name from action arguments: (patrol ecobot <room>)
+    room_ = get_arguments()[1];
+    
+    RCLCPP_INFO(get_logger(), "Starting patrol of %s", room_.c_str());
 
     cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
     cmd_vel_pub_->on_activate();
@@ -47,7 +42,6 @@ public:
   on_deactivate(const rclcpp_lifecycle::State & previous_state)
   {
     cmd_vel_pub_->on_deactivate();
-
     return ActionExecutorClient::on_deactivate(previous_state);
   }
 
@@ -56,36 +50,53 @@ private:
   {
     if (progress_ < 1.0) {
       progress_ += 0.1;
-
       send_feedback(progress_, "Patrol running");
 
+      // Spin in place
       geometry_msgs::msg::Twist cmd;
-      cmd.linear.x = 0.0;
-      cmd.linear.y = 0.0;
-      cmd.linear.z = 0.0;
-      cmd.angular.x = 0.0;
-      cmd.angular.y = 0.0;
       cmd.angular.z = 0.5;
-
       cmd_vel_pub_->publish(cmd);
+      
     } else {
+      // Stop
       geometry_msgs::msg::Twist cmd;
-      cmd.linear.x = 0.0;
-      cmd.linear.y = 0.0;
-      cmd.linear.z = 0.0;
-      cmd.angular.x = 0.0;
-      cmd.angular.y = 0.0;
-      cmd.angular.z = 0.0;
-
       cmd_vel_pub_->publish(cmd);
 
+      // Check if room is unoccupied and light is on
+      check_and_turn_off_light();
+
+      RCLCPP_INFO(get_logger(), "Patrol of %s completed", room_.c_str());
       finish(true, 1.0, "Patrol completed");
     }
   }
 
-  float progress_;
+  void check_and_turn_off_light()
+  {
+    // Check predicates
+    bool is_occupied = problem_expert_->existPredicate(
+      plansys2::Predicate("(occupied " + room_ + ")"));
+    bool light_is_on = problem_expert_->existPredicate(
+      plansys2::Predicate("(light_on " + room_ + ")"));
 
+    if (light_is_on && !is_occupied) {
+      RCLCPP_INFO(get_logger(), "Room %s is unoccupied with light on - turning off", room_.c_str());
+      
+      // Remove the light_on predicate
+      problem_expert_->removePredicate(
+        plansys2::Predicate("(light_on " + room_ + ")"));
+        
+    } else if (light_is_on && is_occupied) {
+      RCLCPP_INFO(get_logger(), "Room %s is occupied - leaving light on", room_.c_str());
+    } else {
+      RCLCPP_INFO(get_logger(), "Room %s light already off", room_.c_str());
+    }
+  }
+
+  float progress_;
+  std::string room_;
+  
   rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
+  std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
 };
 
 int main(int argc, char ** argv)
@@ -99,6 +110,5 @@ int main(int argc, char ** argv)
   rclcpp::spin(node->get_node_base_interface());
 
   rclcpp::shutdown();
-
   return 0;
 }
