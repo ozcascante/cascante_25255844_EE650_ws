@@ -30,6 +30,8 @@ set(dependencies
     plansys2_problem_expert
     plansys2_pddl_parser   
     gazebo_msgs
+    std_msgs
+    lifecycle_msgs
 )
 
 add_executable(move_action_node src/move_action_node.cpp)
@@ -41,12 +43,20 @@ ament_target_dependencies(patrol_action_node ${dependencies})
 add_executable(patrolling_controller_node src/patrolling_controller_node.cpp)
 ament_target_dependencies(patrolling_controller_node ${dependencies})
 
+add_executable(problem_generator_node src/problem_generator_node.cpp)
+ament_target_dependencies(problem_generator_node ${dependencies})
+
+add_executable(turn_off_light_action_node src/turn_off_light_action_node.cpp)
+ament_target_dependencies(turn_off_light_action_node ${dependencies})
+
 install(DIRECTORY launch pddl worlds params DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   move_action_node
   patrol_action_node
   patrolling_controller_node
+  problem_generator_node
+  turn_off_light_action_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
