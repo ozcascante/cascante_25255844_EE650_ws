@@ -97,33 +97,61 @@ public:
 private:
   void state_callback(const std_msgs::msg::String::SharedPtr msg)
   {
-    if (state_ != WAITING_FOR_STATE) return;
+      if (state_ != WAITING_FOR_STATE) return;
 
-    // Parse: critical:room;high:room;low:room1,room2,...
-    std::string data = msg->data;
+      std::string data = msg->data;
 
-    size_t crit_pos = data.find("critical:") + 9;
-    size_t crit_end = data.find(";", crit_pos);
-    critical_room_ = data.substr(crit_pos, crit_end - crit_pos);
+      size_t crit_pos = data.find("critical:") + 9;
+      size_t crit_end = data.find(";", crit_pos);
+      critical_room_ = data.substr(crit_pos, crit_end - crit_pos);
 
-    size_t high_pos = data.find("high:") + 5;
-    size_t high_end = data.find(";", high_pos);
-    high_room_ = data.substr(high_pos, high_end - high_pos);
+      size_t high_pos = data.find("high:") + 5;
+      size_t high_end = data.find(";", high_pos);
+      high_room_ = data.substr(high_pos, high_end - high_pos);
 
-    size_t low_pos = data.find("low:") + 4;
-    std::string low_str = data.substr(low_pos);
+      size_t low_pos = data.find("low:") + 4;
+      std::string low_str = data.substr(low_pos);
 
-    std::stringstream ss(low_str);
-    std::string room;
-    while (std::getline(ss, room, ',')) {
-      low_rooms_.push_back(room);
-    }
+      std::stringstream ss(low_str);
+      std::string room;
+      while (std::getline(ss, room, ',')) {
+          if (!room.empty() && room.back() == ';')
+              room.pop_back();
+          low_rooms_.push_back(room);
+      }
 
-    RCLCPP_INFO(this->get_logger(), "Received state - Critical: %s, High: %s, Low rooms: %zu",
-      critical_room_.c_str(), high_room_.c_str(), low_rooms_.size());
+      //-----------------------------------------------------------
+      // FIX #2: Ensure the start room is included in patrol order
+      //-----------------------------------------------------------
+      std::string problem_str = problem_expert_->getProblem();
+      size_t pos = problem_str.find("(robot_at ecobot ");
+      std::string start_room_parsed;
 
-    state_ = PATROL_CRITICAL;
+      if (pos != std::string::npos) {
+          size_t begin = pos + std::string("(robot_at ecobot ").size();
+          size_t end = problem_str.find(")", begin);
+          start_room_parsed = problem_str.substr(begin, end - begin);
+      }
+
+      low_rooms_.erase(
+          std::remove(low_rooms_.begin(), low_rooms_.end(), start_room_parsed),
+          low_rooms_.end()
+      );
+
+      low_rooms_.insert(low_rooms_.begin(), start_room_parsed);
+
+      RCLCPP_INFO(this->get_logger(),
+          "Start room '%s' inserted first in patrol list",
+          start_room_parsed.c_str());
+      //-----------------------------------------------------------
+
+      RCLCPP_INFO(this->get_logger(),
+          "Received state - Critical: %s, High: %s, Low rooms: %zu",
+          critical_room_.c_str(), high_room_.c_str(), low_rooms_.size());
+
+      state_ = PATROL_CRITICAL;
   }
+
 
   void execute_patrol(const std::string & room, const std::string & priority, State next_state)
   {
