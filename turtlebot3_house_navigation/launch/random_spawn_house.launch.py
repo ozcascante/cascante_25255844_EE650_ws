@@ -26,7 +26,7 @@ def generate_launch_description():
     start_room_file = '/tmp/patrol_start_room.txt'
     with open(start_room_file, 'w') as f:
         f.write(start_room)
-    print(f"[random_spawn] Selected start room: {start_room} at ({x}, {y})")
+    print(f"\033[1;94m[random_spawn] Selected start room: {start_room} at ({x}, {y})\033[0m")
 
 
     # Launch Gazebo + TB3 in the house world
