@@ -1,11 +1,12 @@
 # rooms.yaml
 /**:
   ros__parameters:
-    waypoints: ["dining","kitchen","utility","hallway", "bedroom1", "bedroom2","bathroom"]
-    dining: [-2.55, 0.95, 0.0]
+    waypoints: ["dining","kitchen","utility", "bedroom1", "bedroom2","bathroom"]
+#    waypoints: ["dining","kitchen","utility","hallway", "bedroom1", "bedroom2","bathroom"]
+    dining: [-2.55, 0.6, 0.0]
     kitchen: [-6.35, 3.1, 0.0]  # [x, y, yaw]
     utility: [-6.35, -0.28, 0.0]
-    hallway: [1.35, 0.5, 0.0]
-    bedroom1: [5.0, 0.65, 0.0]
+#    hallway: [1.35, 0.5, 0.0]
+    bedroom1: [5.0, 0.6, 0.0]
     bedroom2: [6.12, -1.62, 0.0]    
     bathroom: [1.2, 4.1, 0.0]
