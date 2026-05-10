@@ -86,12 +86,12 @@ private:
     RCLCPP_INFO(this->get_logger(), "====== Generated Initial State =====");
     RCLCPP_INFO(this->get_logger(), "====================================");
     RCLCPP_INFO(this->get_logger(), "Start room: %s", start_room_.c_str());
-    RCLCPP_INFO(this->get_logger(), "Critical: %s", critical_room_.c_str());
-    RCLCPP_INFO(this->get_logger(), "High: %s", high_room_.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;31mCritical: %s\033[0m", critical_room_.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;38;5;208mHigh: %s\033[0m", high_room_.c_str());
 
     std::string low_str;
     for (const auto & r : low_rooms_) low_str += r + " ";
-    RCLCPP_INFO(this->get_logger(), "Low: %s", low_str.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;32mLow: %s\033[0m", low_str.c_str());
 
     for (const auto & room : waypoints_) {
       RCLCPP_INFO(this->get_logger(), "  %s: occupied=%s, light=%s",
@@ -142,8 +142,9 @@ private:
     std::vector<std::pair<std::string, std::string>> connections = {
       {"dining", "kitchen"}, {"kitchen", "dining"},
       {"kitchen", "utility"}, {"utility", "kitchen"},
-      {"dining", "hallway"}, {"hallway", "dining"},
-      {"hallway", "bedroom1"}, {"bedroom1", "hallway"},
+      {"dining", "bedroom1"}, {"bedroom1", "dining"},
+    //  {"dining", "hallway"}, {"hallway", "dining"}, Took it off. Not really helping if patrol in the hallway.
+    //  {"hallway", "bedroom1"}, {"bedroom1", "hallway"},
       {"bedroom1", "bedroom2"}, {"bedroom2", "bedroom1"},
       {"bedroom1", "bathroom"}, {"bathroom", "bedroom1"}
     };
@@ -158,12 +159,13 @@ private:
 
   void publish_state()
   {
-    // Format: critical:room;high:room;low:room1,room2,...
+    // Format: critical:room;high:room;low:room1,room2,...;
     std::string state_str = "critical:" + critical_room_ + ";high:" + high_room_ + ";low:";
     for (size_t i = 0; i < low_rooms_.size(); ++i) {
       state_str += low_rooms_[i];
       if (i < low_rooms_.size() - 1) state_str += ",";
     }
+    state_str += ";";   // Found the bug of the missing room.
 
     auto msg = std_msgs::msg::String();
     msg.data = state_str;
@@ -199,3 +201,13 @@ int main(int argc, char ** argv)
   rclcpp::shutdown();
   return 0;
 }
+
+// Text Color - make easy to read the logs.
+// Color  Code             Bright/Bold
+// Red    \033[0;31m       \033[1;31m
+// Orange \033[0;38;5;208m \033[1;38;5;208m
+// Green  \033[0;32m       \033[1;32m
+// Yellow \033[0;33m       \033[1;33m
+// Blue   \033[0;34m       \033[1;34m
+// Cyan   \033[0;36m       \033[1;36m
+// Reset  \033[0m         (Always at end)
