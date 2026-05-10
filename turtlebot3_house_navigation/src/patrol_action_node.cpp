@@ -63,33 +63,44 @@ private:
       cmd_vel_pub_->publish(cmd);
 
       // Check if room is unoccupied and light is on
-      check_and_turn_off_light();
+      check_light_state();
 
       RCLCPP_INFO(get_logger(), "Patrol of %s completed", room_.c_str());
       finish(true, 1.0, "Patrol completed");
     }
   }
 
-  void check_and_turn_off_light()
+  void check_light_state()
   {
-    // Check predicates
-    bool is_occupied = problem_expert_->existPredicate(
-      plansys2::Predicate("(occupied " + room_ + ")"));
-    bool light_is_on = problem_expert_->existPredicate(
-      plansys2::Predicate("(light_on " + room_ + ")"));
-
-    if (light_is_on && !is_occupied) {
-      RCLCPP_INFO(get_logger(), "Room %s is unoccupied with light on - turning off", room_.c_str());
-      
-      // Remove the light_on predicate
-      problem_expert_->removePredicate(
+      // Check predicates
+      bool is_occupied = problem_expert_->existPredicate(
+        plansys2::Predicate("(occupied " + room_ + ")"));
+      bool light_is_on = problem_expert_->existPredicate(
         plansys2::Predicate("(light_on " + room_ + ")"));
-        
-    } else if (light_is_on && is_occupied) {
-      RCLCPP_INFO(get_logger(), "Room %s is occupied - leaving light on", room_.c_str());
-    } else {
-      RCLCPP_INFO(get_logger(), "Room %s light already off", room_.c_str());
-    }
+
+      // CASE 1: Light ON + room empty -> turn OFF
+      if (light_is_on && !is_occupied) {
+        RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is unoccupied with light ON - turning OFF\033[0m", room_.c_str());
+        problem_expert_->removePredicate(
+          plansys2::Predicate("(light_on " + room_ + ")"));
+      }
+
+      // CASE 2: Light OFF + room occupied -> turn ON
+      else if (!light_is_on && is_occupied) {
+        RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is occupied with light off - turning ON\033[0m", room_.c_str());
+        problem_expert_->addPredicate(
+          plansys2::Predicate("(light_on " + room_ + ")"));
+      }
+
+      // CASE 3: Light ON + room occupied -> leave ON
+      else if (light_is_on && is_occupied) {
+        RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is occupied - leaving light ON\033[0m", room_.c_str());
+      }
+
+      // CASE 4: Light OFF + room empty -> leave OFF
+      else {
+        RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is unoccupied - leaving light OFF\033[0m", room_.c_str());
+      }
   }
 
   float progress_;
