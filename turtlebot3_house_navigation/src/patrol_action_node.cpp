@@ -30,7 +30,7 @@ public:
     // Get room name from action arguments: (patrol ecobot <room>)
     room_ = get_arguments()[1];
     
-    RCLCPP_INFO(get_logger(), "Starting patrol of %s", room_.c_str());
+    RCLCPP_INFO(get_logger(), "\033[1;34mStarting patrol of %s\033[0m", room_.c_str());
 
     cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
     cmd_vel_pub_->on_activate();
@@ -78,26 +78,26 @@ private:
       bool light_is_on = problem_expert_->existPredicate(
         plansys2::Predicate("(light_on " + room_ + ")"));
 
-      // CASE 1: Light ON + room empty -> turn OFF
+      // Light ON + room empty will turn OFF lights
       if (light_is_on && !is_occupied) {
         RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is unoccupied with light ON - turning OFF\033[0m", room_.c_str());
         problem_expert_->removePredicate(
           plansys2::Predicate("(light_on " + room_ + ")"));
       }
 
-      // CASE 2: Light OFF + room occupied -> turn ON
+      // Light OFF + room occupied -> turn ON lights
       else if (!light_is_on && is_occupied) {
         RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is occupied with light off - turning ON\033[0m", room_.c_str());
         problem_expert_->addPredicate(
           plansys2::Predicate("(light_on " + room_ + ")"));
       }
 
-      // CASE 3: Light ON + room occupied -> leave ON
+      // Light ON + room occupied -> leave ON lights
       else if (light_is_on && is_occupied) {
         RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is occupied - leaving light ON\033[0m", room_.c_str());
       }
 
-      // CASE 4: Light OFF + room empty -> leave OFF
+      // Light OFF + room empty -> leave OFF lights
       else {
         RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is unoccupied - leaving light OFF\033[0m", room_.c_str());
       }
@@ -123,3 +123,13 @@ int main(int argc, char ** argv)
   rclcpp::shutdown();
   return 0;
 }
+
+// Text Color - make easy to read the logs.
+// Color  Code             Bright/Bold
+// Red    \033[0;31m       \033[1;31m
+// Orange \033[0;38;5;208m \033[1;38;5;208m
+// Green  \033[0;32m       \033[1;32m
+// Yellow \033[0;33m       \033[1;33m
+// Blue   \033[0;34m       \033[1;34m
+// Cyan   \033[0;36m       \033[1;36m
+// Reset  \033[0m         (Always at end)

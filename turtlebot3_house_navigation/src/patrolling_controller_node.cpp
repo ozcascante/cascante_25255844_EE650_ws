@@ -34,6 +34,9 @@ public:
   PatrollingController()
   : Node("patrolling_controller"), state_(WAITING_FOR_STATE),should_exit_(false)
   {
+    // Debug_mode to enable messages only for debgug.
+    this->declare_parameter("debug_mode", 0);
+    debug_mode_ = this->get_parameter("debug_mode").as_int();
   }
   bool shouldExit() const { return should_exit_; }
 
@@ -71,7 +74,7 @@ public:
         if (current_low_index_ < low_rooms_.size()) {
           execute_patrol(low_rooms_[current_low_index_], "LOW", PATROL_LOW);
         } else {
-          RCLCPP_INFO(this->get_logger(), "=== All rooms patrolled! ===");
+          RCLCPP_INFO(this->get_logger(), "\033[1;34m=== All rooms patrolled! ===\033[0m");
           state_ = FINISHED;
         }
         break;
@@ -120,9 +123,6 @@ private:
           low_rooms_.push_back(room);
       }
 
-      //-----------------------------------------------------------
-      // FIX #2: Ensure the start room is included in patrol order
-      //-----------------------------------------------------------
       std::string problem_str = problem_expert_->getProblem();
       size_t pos = problem_str.find("(robot_at ecobot ");
       std::string start_room_parsed;
@@ -155,16 +155,21 @@ private:
 
   void execute_patrol(const std::string & room, const std::string & priority, State next_state)
   {
-    RCLCPP_INFO(this->get_logger(), ">>> Patrolling %s room: %s", priority.c_str(), room.c_str());
+    
+    last_printed_pct_ = 0;
+    
+    RCLCPP_INFO(this->get_logger(), "\033[1;34mPatrolling %s room: %s\033[0m", priority.c_str(), room.c_str());
 
     std::string goal = "(and (patrolled " + room + "))";
     problem_expert_->setGoal(plansys2::Goal(goal));
 
     auto domain = domain_expert_->getDomain();
-    auto problem = problem_expert_->getProblem();  // Only declare ONCE
+    auto problem = problem_expert_->getProblem(); 
 
     // Debug: print current problem state
-    RCLCPP_INFO(this->get_logger(), "Current problem:\n%s", problem.c_str());
+    if (debug_mode_) {
+      RCLCPP_INFO(this->get_logger(), "Current problem:\n%s", problem.c_str());
+    }  
 
     auto plan = planner_client_->getPlan(domain, problem);
 
@@ -190,13 +195,25 @@ private:
   {
     auto feedback = executor_client_->getFeedBack();
 
+    // A bit of a hassle to write all this, but otherwise there are too many messages even duirng debug.
     for (const auto & action_feedback : feedback.action_execution_status) {
       if (action_feedback.status == plansys2_msgs::msg::ActionExecutionInfo::EXECUTING) {
-        // This will only print once every 3000ms (3 seconds)
-        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 3000, 
-          "[%s %.0f%%]",
-          action_feedback.action.c_str(),
-          action_feedback.completion * 100.0);
+        if (debug_mode_) {
+          int pct = static_cast<int>(action_feedback.completion * 100.0);
+          if (pct >= 25 && last_printed_pct_ < 25) {
+            RCLCPP_INFO(this->get_logger(), "[%s 25%%]", action_feedback.action.c_str());
+            last_printed_pct_ = 25;
+          } else if (pct >= 50 && last_printed_pct_ < 50) {
+            RCLCPP_INFO(this->get_logger(), "[%s 50%%]", action_feedback.action.c_str());
+            last_printed_pct_ = 50;
+          } else if (pct >= 75 && last_printed_pct_ < 75) {
+            RCLCPP_INFO(this->get_logger(), "[%s 75%%]", action_feedback.action.c_str());
+            last_printed_pct_ = 75;
+          } else if (pct >= 100 && last_printed_pct_ < 100) {
+            RCLCPP_INFO(this->get_logger(), "[%s 100%%]", action_feedback.action.c_str());
+            last_printed_pct_ = 100;
+          }
+        }
       }
     }
 
@@ -204,7 +221,7 @@ private:
       auto result = executor_client_->getResult();
 
       if (result.value().success) {
-        RCLCPP_INFO(this->get_logger(), "Completed patrol of %s", current_room_.c_str());
+        RCLCPP_INFO(this->get_logger(), "\033[1;34mCompleted patrol of %s\033[0m", current_room_.c_str());
 
         // Clean up patrolled predicate for next iteration
         problem_expert_->removePredicate(
@@ -218,6 +235,7 @@ private:
 
       } else {
         RCLCPP_ERROR(this->get_logger(), "Execution failed for %s", current_room_.c_str());
+        last_printed_pct_ = 0;  // reset for replan
         state_ = FAILED;
       }
     }
@@ -232,6 +250,8 @@ private:
   size_t current_low_index_ = 0;
   std::string current_room_;
   bool should_exit_ = false;
+  int debug_mode_;
+  int last_printed_pct_ = 0;
 
   std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
   std::shared_ptr<plansys2::PlannerClient> planner_client_;
@@ -261,3 +281,13 @@ int main(int argc, char ** argv)
   rclcpp::shutdown();
   return 0;
 }
+
+// Text Color - make easy to read the logs.
+// Color  Code             Bright/Bold
+// Red    \033[0;31m       \033[1;31m
+// Orange \033[0;38;5;208m \033[1;38;5;208m
+// Green  \033[0;32m       \033[1;32m
+// Yellow \033[0;33m       \033[1;33m
+// Blue   \033[0;34m       \033[1;34m
+// Cyan   \033[0;36m       \033[1;36m
+// Reset  \033[0m         (Always at end)

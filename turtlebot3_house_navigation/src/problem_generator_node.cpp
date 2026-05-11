@@ -25,6 +25,10 @@ public:
     this->declare_parameter("start_room_name", "");
     start_room_ = this->get_parameter("start_room_name").as_string();
 
+    // debug_mode - avoid display so many messages. Only for debug.
+    this->declare_parameter("debug_mode", 0);
+    debug_mode_ = this->get_parameter("debug_mode").as_int();
+
     // Publisher for initial state (controller subscribes)
     state_pub_ = this->create_publisher<std_msgs::msg::String>("/initial_state", 10);
   }
@@ -85,7 +89,7 @@ private:
     RCLCPP_INFO(this->get_logger(), "====================================");
     RCLCPP_INFO(this->get_logger(), "====== Generated Initial State =====");
     RCLCPP_INFO(this->get_logger(), "====================================");
-    RCLCPP_INFO(this->get_logger(), "Start room: %s", start_room_.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;34mStart room: %s\033[0m", start_room_.c_str());
     RCLCPP_INFO(this->get_logger(), "\033[1;31mCritical: %s\033[0m", critical_room_.c_str());
     RCLCPP_INFO(this->get_logger(), "\033[1;38;5;208mHigh: %s\033[0m", high_room_.c_str());
 
@@ -94,7 +98,7 @@ private:
     RCLCPP_INFO(this->get_logger(), "\033[1;32mLow: %s\033[0m", low_str.c_str());
 
     for (const auto & room : waypoints_) {
-      RCLCPP_INFO(this->get_logger(), "  %s: occupied=%s, light=%s",
+      RCLCPP_INFO(this->get_logger(), "\033[1;34m  %s: occupied=%s, light=%s\033[0m",
         room.c_str(),
         occupied_[room] ? "yes" : "no",
         light_on_[room] ? "on" : "off");
@@ -181,6 +185,7 @@ private:
 
   std::vector<std::string> waypoints_;
   std::string start_room_;
+  int debug_mode_;
 
   std::string critical_room_;
   std::string high_room_;

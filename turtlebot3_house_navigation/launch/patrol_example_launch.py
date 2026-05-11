@@ -10,7 +10,7 @@ def generate_launch_description():
     pkg_dir = get_package_share_directory('turtlebot3_house_navigation')
     plansys_dir = get_package_share_directory('plansys2_bringup')
 
-    rooms_params_file = os.path.join(pkg_dir, 'params', 'rooms.yaml')
+    config_params_file = os.path.join(pkg_dir, 'params', 'config.yaml')
 
     # PlanSys2 Bringup
     plansys2_cmd = IncludeLaunchDescription(
@@ -23,7 +23,7 @@ def generate_launch_description():
         }.items()
     )
 
-    common_params = [rooms_params_file, {'use_sim_time': True}]
+    common_params = [config_params_file, {'use_sim_time': True}]
 
     # Problem generator - runs first to set up random initial state
     problem_generator_cmd = Node(

@@ -12,7 +12,7 @@ def generate_launch_description():
 
     # Load rooms.yaml
     pkg_dir = get_package_share_directory('turtlebot3_house_navigation')
-    rooms_yaml = os.path.join(pkg_dir, 'params', 'rooms.yaml')
+    rooms_yaml = os.path.join(pkg_dir, 'params', 'config.yaml')
 
     with open(rooms_yaml, 'r') as f:
         data = yaml.safe_load(f)
