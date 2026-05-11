@@ -40,8 +40,11 @@ public:
     RCLCPP_INFO(this->get_logger(), "Waiting for PlanSys2...");
     rclcpp::sleep_for(5s);
 
+    // Create Room Priority, Room occupancy and Light states
     generate_random_state();
+    // Build the problem for PlanSys2
     populate_problem();
+    // Publish the problem to topic /initial_state
     publish_state();
 
     RCLCPP_INFO(this->get_logger(), "Problem generation complete");
@@ -89,7 +92,7 @@ private:
     RCLCPP_INFO(this->get_logger(), "====================================");
     RCLCPP_INFO(this->get_logger(), "====== Generated Initial State =====");
     RCLCPP_INFO(this->get_logger(), "====================================");
-    RCLCPP_INFO(this->get_logger(), "\033[1;34mStart room: %s\033[0m", start_room_.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;36mRandom Start Room: %s\033[0m", start_room_.c_str());
     RCLCPP_INFO(this->get_logger(), "\033[1;31mCritical: %s\033[0m", critical_room_.c_str());
     RCLCPP_INFO(this->get_logger(), "\033[1;38;5;208mHigh: %s\033[0m", high_room_.c_str());
 
@@ -169,7 +172,7 @@ private:
       state_str += low_rooms_[i];
       if (i < low_rooms_.size() - 1) state_str += ",";
     }
-    state_str += ";";   // Found the bug of the missing room.
+    state_str += ";";   // Found the bug of the missing room. Alwasy a ';' :)-
 
     auto msg = std_msgs::msg::String();
     msg.data = state_str;

@@ -84,7 +84,7 @@ public:
         break;
 
       case FINISHED:
-        RCLCPP_INFO_ONCE(this->get_logger(), "Patrol complete. Shutting down.");
+        RCLCPP_INFO_ONCE(this->get_logger(), "\033[1;36mPatrol complete. Thats all folks.\033[0m");
         should_exit_ = true;
         //rclcpp::shutdown();
         break;
@@ -140,8 +140,9 @@ private:
 
       low_rooms_.insert(low_rooms_.begin(), start_room_parsed);
 
+      // There is a bug here but I can find it.
       RCLCPP_INFO(this->get_logger(),
-          "Start room '%s' inserted first in patrol list",
+          "Random Start room '%s' inserted first in patrol list",
           start_room_parsed.c_str());
       //-----------------------------------------------------------
 

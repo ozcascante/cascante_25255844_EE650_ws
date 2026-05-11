@@ -58,7 +58,7 @@ public:
       wp.pose.orientation.z = 0.0;
       wp.pose.orientation.w = 1.0; // Simplify orientation for now
       waypoints_[name] = wp;
-      RCLCPP_INFO(get_logger(), "Loaded room: %s at [%f, %f]", name.c_str(), coords[0], coords[1]);
+      RCLCPP_INFO(get_logger(), "\033[1;34mLoaded room: %s at [%f, %f]\033[0m", name.c_str(), coords[0], coords[1]);
     }  
     
 
@@ -95,7 +95,7 @@ public:
     RCLCPP_INFO(get_logger(), "Navigation action server ready");
 
     auto wp_to_navigate = get_arguments()[2];  // The goal is in the 3rd argument of the action
-    RCLCPP_INFO(get_logger(), "Start navigation to [%s]", wp_to_navigate.c_str());
+    RCLCPP_INFO(get_logger(), "\033[1;34mStart navigation to [%s]\033[0m", wp_to_navigate.c_str());
 
     goal_pos_ = waypoints_[wp_to_navigate];
     navigation_goal_.pose = goal_pos_;
@@ -168,3 +168,13 @@ int main(int argc, char ** argv)
 
   return 0;
 }
+
+// Text Color - make easy to read the logs.
+// Color  Code             Bright/Bold
+// Red    \033[0;31m       \033[1;31m
+// Orange \033[0;38;5;208m \033[1;38;5;208m
+// Green  \033[0;32m       \033[1;32m
+// Yellow \033[0;33m       \033[1;33m
+// Blue   \033[0;34m       \033[1;34m
+// Cyan   \033[0;36m       \033[1;36m
+// Reset  \033[0m         (Always at end)
