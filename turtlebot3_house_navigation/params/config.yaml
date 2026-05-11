@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    # Debug flag: 1 = show debug messages, 0 = silent
+    debug_mode: 0
+
+    waypoints: ["dining","kitchen","utility", "bedroom1", "bedroom2","bathroom"]
+    dining: [-2.55, 0.6, 0.0] # [x, y, yaw]
+    kitchen: [-6.35, 3.1, 0.0]   
+    utility: [-6.35, -0.28, 0.0]
+    bedroom1: [5.0, 0.6, 0.0]
+    bedroom2: [6.12, -1.62, 0.0]
+    bathroom: [1.2, 4.1, 0.0]
