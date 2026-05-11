@@ -1,7 +1,8 @@
 /**:
   ros__parameters:
-    # Debug flag: 1 = show debug messages, 0 = silent
-    debug_mode: 0
+    # Debug flag: 1 = show debug messages, 0 = show less debug messages
+    # 0: removed progress status messages and problems from each task
+    debug_mode: 1
 
     waypoints: ["dining","kitchen","utility", "bedroom1", "bedroom2","bathroom"]
     dining: [-2.55, 0.6, 0.0] # [x, y, yaw]
