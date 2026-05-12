@@ -44,5 +44,9 @@ By submitting this assignment, I declare that this is all my own work and does n
 I used PlanSys2 plansys2_patrol_navigation_example code example and modified to fit the project requirements. I used GenIA to help me modify the code and check C++ sintaxis. Most of the querries are related to how I implement a piece of code like a randomizer in C++. Used it help me find bugs in the code or get ideas on how to implement a process/procedure in PlanSys2. I used GenIA to help me debug the environment initially, to find libraries missing or understand why gazebo or rviz where failing to load in WSL.
 
 All code and the evolution of code is documented in github: https://github.com/ozcascante/cascante_25255844_EE650_ws
+```
+git clone git@github.com:ozcascante/cascante_25255844_EE650_ws.git
+```
+
 A short video presentation of the full simulation can be found here : https://www.youtube.com/watch?v=ixot5mydRNg
 
