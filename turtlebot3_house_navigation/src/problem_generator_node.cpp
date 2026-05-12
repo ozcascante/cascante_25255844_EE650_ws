@@ -93,21 +93,16 @@ private:
     RCLCPP_INFO(this->get_logger(), "====================================");
     RCLCPP_INFO(this->get_logger(), "====== Generated Initial State =====");
     RCLCPP_INFO(this->get_logger(), "====================================");
-    RCLCPP_INFO(this->get_logger(),
-      "\033[1;36mRandom Start Room: %s\033[0m", start_room_.c_str());
-    RCLCPP_INFO(this->get_logger(),
-      "\033[1;31mCritical: %s\033[0m", critical_room_.c_str());
-    RCLCPP_INFO(this->get_logger(),
-      "\033[1;38;5;208mHigh: %s\033[0m", high_room_.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;36mRandom Start Room: %s\033[0m", start_room_.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;31mCritical: %s\033[0m", critical_room_.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;93mHigh: %s\033[0m", high_room_.c_str());
 
     std::string low_str;
     for (const auto & r : low_rooms_) low_str += r + " ";
-    RCLCPP_INFO(this->get_logger(),
-      "\033[1;32mLow: %s\033[0m", low_str.c_str());
+    RCLCPP_INFO(this->get_logger(), "\033[1;32mLow: %s\033[0m", low_str.c_str());
 
     for (const auto & room : waypoints_) {
-      RCLCPP_INFO(this->get_logger(),
-        "\033[1;34m  %s: occupied=%s, light=%s\033[0m",
+      RCLCPP_INFO(this->get_logger(), "\033[1;34m  %s: occupied=%s, light=%s\033[0m",
         room.c_str(),
         occupied_[room] ? "yes" : "no",
         light_on_[room] ? "on" : "off");
@@ -236,3 +231,13 @@ int main(int argc, char ** argv)
   rclcpp::shutdown();
   return 0;
 }
+
+// Text Color - make easy to read the logs.
+// Color  Code             Bright/Bold
+// Red    \033[0;31m       \033[1;31m
+// Orange \033[0;38;5;208m \033[1;38;5;208m
+// Green  \033[0;32m       \033[1;32m
+// Yellow \033[0;33m       \033[1;33m
+// Blue   \033[0;34m       \033[1;34m
+// Cyan   \033[0;36m       \033[1;36m
+// Reset  \033[0m         (Always at end)
