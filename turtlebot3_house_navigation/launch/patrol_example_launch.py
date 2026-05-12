@@ -47,13 +47,6 @@ def generate_launch_description():
         output='screen',
         parameters=common_params)
 
-    turn_off_light_cmd = Node(
-        package='turtlebot3_house_navigation',
-        executable='turn_off_light_action_node',
-        name='turn_off_light_action_node',
-        output='screen',
-        parameters=common_params)
-
     controller_cmd = Node(
         package='turtlebot3_house_navigation',
         executable='patrolling_controller_node',
@@ -66,6 +59,5 @@ def generate_launch_description():
         problem_generator_cmd,
         move_cmd,
         patrol_cmd,
-        turn_off_light_cmd,
         controller_cmd
     ])
