@@ -144,13 +144,12 @@ private:
       RCLCPP_INFO(this->get_logger(),
           "Random Start room '%s' inserted first in patrol list",
           start_room_parsed.c_str());
-      //-----------------------------------------------------------
 
       RCLCPP_INFO(this->get_logger(),
           "Received state - Critical: %s, High: %s, Low rooms: %zu",
           critical_room_.c_str(), high_room_.c_str(), low_rooms_.size());
-
-      state_ = PATROL_CRITICAL;
+     
+          state_ = PATROL_CRITICAL;
   }
 
 

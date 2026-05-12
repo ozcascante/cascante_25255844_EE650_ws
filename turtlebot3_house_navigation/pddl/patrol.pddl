@@ -4,14 +4,24 @@
 (:types
   robot
   room
+  energy
+)
+
+(:constants
+  low high critical - energy
 )
 
 (:predicates
   (robot_at ?r - robot ?rm - room)
   (connected ?rm1 ?rm2 - room)
   (patrolled ?rm - room)
+
+  ;; Rooms state for occupancy and light status
   (occupied ?rm - room)
   (light_on ?rm - room)
+
+  ;; Room energy level simulation
+  (energy_level ?rm - room ?e - energy)
 )
 
 (:durative-action move
@@ -39,5 +49,3 @@
 )
 
 )
-
-

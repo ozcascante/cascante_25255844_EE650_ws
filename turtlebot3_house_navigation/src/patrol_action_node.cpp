@@ -73,23 +73,21 @@ private:
   void check_light_state()
   {
       // Check predicates
-      bool is_occupied = problem_expert_->existPredicate(
-        plansys2::Predicate("(occupied " + room_ + ")"));
-      bool light_is_on = problem_expert_->existPredicate(
-        plansys2::Predicate("(light_on " + room_ + ")"));
+      bool is_occupied = problem_expert_->existPredicate(plansys2::Predicate("(occupied " + room_ + ")"));
+      bool light_is_on = problem_expert_->existPredicate(plansys2::Predicate("(light_on " + room_ + ")"));
 
       // Light ON + room empty will turn OFF lights
       if (light_is_on && !is_occupied) {
         RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is unoccupied with light ON - turning OFF\033[0m", room_.c_str());
-        problem_expert_->removePredicate(
-          plansys2::Predicate("(light_on " + room_ + ")"));
+        problem_expert_->removePredicate(plansys2::Predicate("(light_on " + room_ + ")"));
+        light_is_on = false;
       }
 
       // Light OFF + room occupied -> turn ON lights
       else if (!light_is_on && is_occupied) {
         RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is occupied with light off - turning ON\033[0m", room_.c_str());
-        problem_expert_->addPredicate(
-          plansys2::Predicate("(light_on " + room_ + ")"));
+        problem_expert_->addPredicate(plansys2::Predicate("(light_on " + room_ + ")"));
+        light_is_on = true;
       }
 
       // Light ON + room occupied -> leave ON lights
@@ -101,6 +99,20 @@ private:
       else {
         RCLCPP_INFO(get_logger(), "\033[1;94mRoom %s is unoccupied - leaving light OFF\033[0m", room_.c_str());
       }
+
+      // Energy Levels Update  (high if light ON, low if OFF)
+      // Remove any existing energy_level for this room
+      problem_expert_->removePredicate(plansys2::Predicate("(energy_level " + room_ + " low)"));
+      problem_expert_->removePredicate(plansys2::Predicate("(energy_level " + room_ + " high)"));
+      problem_expert_->removePredicate(plansys2::Predicate("(energy_level " + room_ + " critical)"));
+      // Assign new energy level based on final light state
+      if (light_is_on) {
+        RCLCPP_INFO(get_logger(),"\033[1;93mSetting energy_level of %s to HIGH\033[0m", room_.c_str());
+        problem_expert_->addPredicate(plansys2::Predicate("(energy_level " + room_ + " high)"));
+      } else {
+        RCLCPP_INFO(get_logger(),"\033[1;92mSetting energy_level of %s to LOW\033[0m", room_.c_str());
+      } 
+
   }
 
   float progress_;

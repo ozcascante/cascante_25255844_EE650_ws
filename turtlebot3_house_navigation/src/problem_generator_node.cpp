@@ -73,17 +73,18 @@ private:
       light_on_[room] = coin(gen);
     }
 
-    // Read start room from file (written by launch file). Should be a topic but this is faster.
+    // Read start room from file
     std::string start_room_file = "/tmp/patrol_start_room.txt";
     std::ifstream infile(start_room_file);
     if (infile.good()) {
       std::getline(infile, start_room_);
-      RCLCPP_INFO(this->get_logger(), "Read start room from file: %s", start_room_.c_str());
+      RCLCPP_INFO(this->get_logger(),
+        "Read start room from file: %s", start_room_.c_str());
     } else {
-      // Fallback: random
       std::uniform_int_distribution<size_t> dist(0, waypoints_.size() - 1);
       start_room_ = waypoints_[dist(gen)];
-      RCLCPP_WARN(this->get_logger(), "Could not read start room file, using random: %s", 
+      RCLCPP_WARN(this->get_logger(),
+        "Could not read start room file, using random: %s",
         start_room_.c_str());
     }
     infile.close();
@@ -92,16 +93,21 @@ private:
     RCLCPP_INFO(this->get_logger(), "====================================");
     RCLCPP_INFO(this->get_logger(), "====== Generated Initial State =====");
     RCLCPP_INFO(this->get_logger(), "====================================");
-    RCLCPP_INFO(this->get_logger(), "\033[1;36mRandom Start Room: %s\033[0m", start_room_.c_str());
-    RCLCPP_INFO(this->get_logger(), "\033[1;31mCritical: %s\033[0m", critical_room_.c_str());
-    RCLCPP_INFO(this->get_logger(), "\033[1;38;5;208mHigh: %s\033[0m", high_room_.c_str());
+    RCLCPP_INFO(this->get_logger(),
+      "\033[1;36mRandom Start Room: %s\033[0m", start_room_.c_str());
+    RCLCPP_INFO(this->get_logger(),
+      "\033[1;31mCritical: %s\033[0m", critical_room_.c_str());
+    RCLCPP_INFO(this->get_logger(),
+      "\033[1;38;5;208mHigh: %s\033[0m", high_room_.c_str());
 
     std::string low_str;
     for (const auto & r : low_rooms_) low_str += r + " ";
-    RCLCPP_INFO(this->get_logger(), "\033[1;32mLow: %s\033[0m", low_str.c_str());
+    RCLCPP_INFO(this->get_logger(),
+      "\033[1;32mLow: %s\033[0m", low_str.c_str());
 
     for (const auto & room : waypoints_) {
-      RCLCPP_INFO(this->get_logger(), "\033[1;34m  %s: occupied=%s, light=%s\033[0m",
+      RCLCPP_INFO(this->get_logger(),
+        "\033[1;34m  %s: occupied=%s, light=%s\033[0m",
         room.c_str(),
         occupied_[room] ? "yes" : "no",
         light_on_[room] ? "on" : "off");
@@ -112,19 +118,24 @@ private:
   {
     problem_expert_->clearKnowledge();
 
-    // Robot
+    // Addin Robot to problem: ecobot sounded like a nice name for our project
     problem_expert_->addInstance(plansys2::Instance{"ecobot", "robot"});
 
-    // Rooms
+    // Energy level constants must be objects for PlanSys2
+    problem_expert_->addInstance(plansys2::Instance{"low", "energy"});
+    problem_expert_->addInstance(plansys2::Instance{"high", "energy"});
+    problem_expert_->addInstance(plansys2::Instance{"critical", "energy"});
+
+    // Adding the rooms rooms read from config file
     for (const auto & room : waypoints_) {
       problem_expert_->addInstance(plansys2::Instance{room, "room"});
     }
 
-    // Robot Starting Position
+    // Robot Starting Position from temp file written during launch file run to start gazebo.
     problem_expert_->addPredicate(
       plansys2::Predicate("(robot_at ecobot " + start_room_ + ")"));
 
-    // Occupancy
+    // Occupancy from random coin toast at the start.
     for (const auto & [room, occ] : occupied_) {
       if (occ) {
         problem_expert_->addPredicate(
@@ -132,7 +143,7 @@ private:
       }
     }
 
-    // Lights
+    // Lights from random coin toast at the start.
     for (const auto & [room, on] : light_on_) {
       if (on) {
         problem_expert_->addPredicate(
@@ -140,18 +151,30 @@ private:
       }
     }
 
-    // Connection between rooms. Added all rooms > 5. Project says at least 5.
-    // Added Hall because robot sometimes get stock in the hallway.
-    // Asking to go to the middle seem to help pass + changing nav2_params.yaml file
-    //    cost_scaling_factor: 30.0 
-    //    inflation_radius: 0.23 # Must be > robot_radius (waffle = 0.22)
+    // Energy level predicates: critical, high, low. This will be useful if we round the patrols but our case
+    // with a single patrol is an excercise only.   
 
+    // Critical Energy level. Only one room should have it. And by the first robot round we end with high (lights on) and low (lights off)
+    problem_expert_->addPredicate(
+      plansys2::Predicate("(energy_level " + critical_room_ + " critical)"));
+
+    // High Level (lights on)
+    problem_expert_->addPredicate(
+      plansys2::Predicate("(energy_level " + high_room_ + " high)"));
+
+    // Low (lights off)
+    for (const auto & room : low_rooms_) {
+      problem_expert_->addPredicate(
+        plansys2::Predicate("(energy_level " + room + " low)"));
+    }
+
+    // Room Connections. They are hardode in the program. We should move to config file so is easy to remove rooms or add rooms.
     std::vector<std::pair<std::string, std::string>> connections = {
       {"dining", "kitchen"}, {"kitchen", "dining"},
       {"kitchen", "utility"}, {"utility", "kitchen"},
       {"dining", "bedroom1"}, {"bedroom1", "dining"},
-    //  {"dining", "hallway"}, {"hallway", "dining"}, Took it off. Not really helping if patrol in the hallway.
-    //  {"hallway", "bedroom1"}, {"bedroom1", "hallway"},
+    //  {"dining", "hallway"}, {"hallway", "dining"}, // Took it off. Not really helping if patrol in the hallway.
+    //  {"hallway", "bedroom1"}, {"bedroom1", "hallway"},// Robot gets lost after spinning.
       {"bedroom1", "bedroom2"}, {"bedroom2", "bedroom1"},
       {"bedroom1", "bathroom"}, {"bathroom", "bedroom1"}
     };
@@ -167,23 +190,27 @@ private:
   void publish_state()
   {
     // Format: critical:room;high:room;low:room1,room2,...;
-    std::string state_str = "critical:" + critical_room_ + ";high:" + high_room_ + ";low:";
+    std::string state_str = "critical:" + critical_room_
+                          + ";high:" + high_room_
+                          + ";low:";
+
     for (size_t i = 0; i < low_rooms_.size(); ++i) {
       state_str += low_rooms_[i];
       if (i < low_rooms_.size() - 1) state_str += ",";
     }
-    state_str += ";";   // Found the bug of the missing room. Alwasy a ';' :)-
+
+    state_str += ";";   // Required to avoid parsing bug and missing a room
 
     auto msg = std_msgs::msg::String();
     msg.data = state_str;
 
-    // Publish multiple times to ensure controller receives it
     for (int i = 0; i < 10; ++i) {
       state_pub_->publish(msg);
       rclcpp::sleep_for(100ms);
     }
 
-    RCLCPP_INFO(this->get_logger(), "Published state: %s", state_str.c_str());
+    RCLCPP_INFO(this->get_logger(),
+      "Published state: %s", state_str.c_str());
   }
 
   std::vector<std::string> waypoints_;
@@ -209,13 +236,3 @@ int main(int argc, char ** argv)
   rclcpp::shutdown();
   return 0;
 }
-
-// Text Color - make easy to read the logs.
-// Color  Code             Bright/Bold
-// Red    \033[0;31m       \033[1;31m
-// Orange \033[0;38;5;208m \033[1;38;5;208m
-// Green  \033[0;32m       \033[1;32m
-// Yellow \033[0;33m       \033[1;33m
-// Blue   \033[0;34m       \033[1;34m
-// Cyan   \033[0;36m       \033[1;36m
-// Reset  \033[0m         (Always at end)
