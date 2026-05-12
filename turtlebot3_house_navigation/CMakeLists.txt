@@ -46,9 +46,6 @@ ament_target_dependencies(patrolling_controller_node ${dependencies})
 add_executable(problem_generator_node src/problem_generator_node.cpp)
 ament_target_dependencies(problem_generator_node ${dependencies})
 
-add_executable(turn_off_light_action_node src/turn_off_light_action_node.cpp)
-ament_target_dependencies(turn_off_light_action_node ${dependencies})
-
 install(DIRECTORY launch pddl worlds params DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
@@ -56,7 +53,6 @@ install(TARGETS
   patrol_action_node
   patrolling_controller_node
   problem_generator_node
-  turn_off_light_action_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
