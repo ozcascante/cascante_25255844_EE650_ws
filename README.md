@@ -30,7 +30,7 @@ cd cascante_25255844_EE650_ws
 source setup_tb3.sh
 startrviz
 ```
-Use 2D Point to set the rviz robot postion to match gazebo random room start
+Use 2D Pose Estimate to set the rviz robot postion to match gazebo random room start
 
 In terminal 3:
 ```
